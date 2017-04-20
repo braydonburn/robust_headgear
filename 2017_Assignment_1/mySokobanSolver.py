@@ -25,9 +25,7 @@ def my_team():
     
     '''
     return [ (9715894, 'Braydon', 'Burn'), (9665021, 'Michael', 'Blair') ]
-    '''
-hey buudy
-'''
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

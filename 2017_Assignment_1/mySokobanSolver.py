@@ -75,6 +75,9 @@ class SokobanPuzzle(search.Problem):
         if these actions do not push a box in a taboo cell.
         The actions must belong to the list ['Left', 'Down', 'Right', 'Up']        
         """
+        walls = self.warehouse.walls
+        
+        
         raise NotImplementedError
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -144,9 +147,27 @@ def can_go_there(warehouse, dst):
       False otherwise
     '''
     
-    ##         "INSERT YOUR CODE HERE"
+    x,y = zip(*warehouse.walls)
+    x_length = 1 + max(x)
+    y_length = 1 + max(y)
     
-    raise NotImplementedError()
+    for box in warehouse.boxes:
+        #Check if the destination is out of bounds
+        if dst[0] > x_length or dst[0] < 0:
+            return False
+        elif dst[1] > y_length or dst[1] < 0:
+            return False
+        #Check if the worker is being blocked(x), check aginst y of box and worker
+        elif box[0] in range(warehouse.worker[0],dst[0]) and box[1] is warehouse.worker[1]:
+            return False
+        #Check if the worker is being blocked(y), check aginst x of box and worker
+        elif box[1] in range(warehouse.worker[1],dst[1]) and box[0] is warehouse.worker[0]:
+            return False
+        #Check if the worker is being blocked(both)
+        elif box[1] in range(warehouse.worker[0], dst[0]) and box[1] in range(warehouse.worker[1], dst[1]):
+            return False
+        else:
+            return True
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

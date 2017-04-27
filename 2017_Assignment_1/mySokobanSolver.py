@@ -105,9 +105,39 @@ def check_action_seq(warehouse, action_seq):
                the sequence of actions.  This must be the same string as the
                string returned by the method  Warehouse.__str__()
     '''
-    #Implement Code#
+    #worker = list(warehouse.worker)
+    #boxes = list(warehouse.boxes)
     
-    raise NotImplementedError
+    #Skeleton code, checks not implemented
+    for action in action_seq:
+        if (action is 'Up'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker
+        elif (action is 'Down'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker            
+        elif (action is 'Left'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker
+        elif (action is 'Right'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker
+            
+    WarehouseOut = warehouse.copy(worker, boxes)
+    
+    return WarehouseOut.__str__()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

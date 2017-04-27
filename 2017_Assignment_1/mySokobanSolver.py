@@ -49,8 +49,11 @@ def taboo_cells(warehouse):
        The returned string should NOT have marks for the worker, the targets,
        and the boxes.  
     '''
-    ##         "INSERT YOUR CODE HERE"    
-    raise NotImplementedError()
+    x,y = zip(*warehouse.walls)
+    x_length = max(x) + 1
+    y_length = max(y) + 1
+        
+    
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -105,8 +108,8 @@ def check_action_seq(warehouse, action_seq):
                the sequence of actions.  This must be the same string as the
                string returned by the method  Warehouse.__str__()
     '''
-    #worker = list(warehouse.worker)
-    #boxes = list(warehouse.boxes)
+    worker = list(warehouse.worker)
+    boxes = list(warehouse.boxes)
     
     #Skeleton code, checks not implemented
     for action in action_seq:
@@ -233,3 +236,36 @@ def solve_sokoban_macro(warehouse):
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+def taboo_check(x,y, warehouse):
+    '''
+    Check if a given coordinate is taboo or not.
+        True if the coord is in a corner
+        True if the coord is in not a corner but next to a wall
+        False if the coord is a wall
+        False if the coord is a target
+    
+    @param warehouse: a valid Warehouse object
+
+    @return
+        Whether or not the given coordinate is taboo or not. True if it is,
+        false if it isn't
+    '''
+    
+    #Smallest 'if' statements first to preserve memory
+    if (x,y) in warehouse.walls:
+        return False
+    elif (x,y) in warehouse.target:
+        return False
+    #Check if in corner, not implemented
+    elif (x,y):
+        return True
+    #Check if next to wall
+    elif (x,y):
+        return True
+    else:
+        return False
+    
+    
+    
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    

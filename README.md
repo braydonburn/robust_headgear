@@ -1,2 +1,4 @@
 # robust_headgear
-Artificial Intelligence Puzzle Solver 2017
+Artificial Intelligence Sokoban Puzzle Solver, 2017.
+
+Braydon Burn & Michael Blair.

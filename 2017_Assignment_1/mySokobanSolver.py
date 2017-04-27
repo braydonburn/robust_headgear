@@ -49,8 +49,11 @@ def taboo_cells(warehouse):
        The returned string should NOT have marks for the worker, the targets,
        and the boxes.  
     '''
-    ##         "INSERT YOUR CODE HERE"    
-    raise NotImplementedError()
+    x,y = zip(*warehouse.walls)
+    x_length = max(x) + 1
+    y_length = max(y) + 1
+        
+    
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -75,6 +78,9 @@ class SokobanPuzzle(search.Problem):
         if these actions do not push a box in a taboo cell.
         The actions must belong to the list ['Left', 'Down', 'Right', 'Up']        
         """
+        walls = self.warehouse.walls
+        
+        
         raise NotImplementedError
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -102,10 +108,39 @@ def check_action_seq(warehouse, action_seq):
                the sequence of actions.  This must be the same string as the
                string returned by the method  Warehouse.__str__()
     '''
+    worker = list(warehouse.worker)
+    boxes = list(warehouse.boxes)
     
-    ##         "INSERT YOUR CODE HERE"
+    #Skeleton code, checks not implemented
+    for action in action_seq:
+        if (action is 'Up'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker
+        elif (action is 'Down'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker            
+        elif (action is 'Left'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker
+        elif (action is 'Right'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker
+            
+    WarehouseOut = warehouse.copy(worker, boxes)
     
-    raise NotImplementedError()
+    return WarehouseOut.__str__()
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -126,9 +161,17 @@ def solve_sokoban_elem(warehouse):
             If the puzzle is already in a goal state, simply return []
     '''
     
-    ##         "INSERT YOUR CODE HERE"
+    #Implement check to see if impossible.
     
-    raise NotImplementedError()
+    puzzle = SokobanPuzzle(warehouse)
+    
+    if puzzle.goal_test(puzzle.initial):
+        return []
+    
+    solution = search.astar_tree_search(puzzle#, lambda n:puzzle.h(n)
+    )
+    
+    return puzzle.return_path(solution.path())
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -144,9 +187,27 @@ def can_go_there(warehouse, dst):
       False otherwise
     '''
     
-    ##         "INSERT YOUR CODE HERE"
+    x,y = zip(*warehouse.walls)
+    x_length = 1 + max(x)
+    y_length = 1 + max(y)
     
-    raise NotImplementedError()
+    for box in warehouse.boxes:
+        #Check if the destination is out of bounds
+        if dst[0] > x_length or dst[0] < 0:
+            return False
+        elif dst[1] > y_length or dst[1] < 0:
+            return False
+        #Check if the worker is being blocked(x), check aginst y of box and worker
+        elif box[0] in range(warehouse.worker[0],dst[0]) and box[1] is warehouse.worker[1]:
+            return False
+        #Check if the worker is being blocked(y), check aginst x of box and worker
+        elif box[1] in range(warehouse.worker[1],dst[1]) and box[0] is warehouse.worker[0]:
+            return False
+        #Check if the worker is being blocked(both)
+        elif box[1] in range(warehouse.worker[0], dst[0]) and box[1] in range(warehouse.worker[1], dst[1]):
+            return False
+        else:
+            return True
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -175,3 +236,36 @@ def solve_sokoban_macro(warehouse):
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+def taboo_check(x,y, warehouse):
+    '''
+    Check if a given coordinate is taboo or not.
+        True if the coord is in a corner
+        True if the coord is in not a corner but next to a wall
+        False if the coord is a wall
+        False if the coord is a target
+    
+    @param warehouse: a valid Warehouse object
+
+    @return
+        Whether or not the given coordinate is taboo or not. True if it is,
+        false if it isn't
+    '''
+    
+    #Smallest 'if' statements first to preserve memory
+    if (x,y) in warehouse.walls:
+        return False
+    elif (x,y) in warehouse.target:
+        return False
+    #Check if in corner, not implemented
+    elif (x,y):
+        return True
+    #Check if next to wall
+    elif (x,y):
+        return True
+    else:
+        return False
+    
+    
+    
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    

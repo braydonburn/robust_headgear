@@ -105,10 +105,9 @@ def check_action_seq(warehouse, action_seq):
                the sequence of actions.  This must be the same string as the
                string returned by the method  Warehouse.__str__()
     '''
+    #Implement Code#
     
-    ##         "INSERT YOUR CODE HERE"
-    
-    raise NotImplementedError()
+    raise NotImplementedError
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -129,9 +128,17 @@ def solve_sokoban_elem(warehouse):
             If the puzzle is already in a goal state, simply return []
     '''
     
-    ##         "INSERT YOUR CODE HERE"
+    #Implement check to see if impossible.
     
-    raise NotImplementedError()
+    puzzle = SokobanPuzzle(warehouse)
+    
+    if puzzle.goal_test(puzzle.initial):
+        return []
+    
+    solution = search.astar_tree_search(puzzle#, lambda n:puzzle.h(n)
+    )
+    
+    return puzzle.return_path(solution.path())
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

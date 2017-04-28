@@ -129,7 +129,8 @@ class SokobanPuzzle(search.Problem):
                 and ((x_position, y_position-2) not in self.warehouse.boxes)\
                 and ((x_position, y_position-2) not in self.taboo_check):
                         MovementList.append("Up") 
-                        
+
+        print("Hello!")
         return MovementList
     
     

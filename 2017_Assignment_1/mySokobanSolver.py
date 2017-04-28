@@ -129,7 +129,8 @@ class SokobanPuzzle(search.Problem):
                 and ((x_position, y_position-2) not in self.warehouse.boxes)\
                 and ((x_position, y_position-2) not in self.taboo_check):
                         MovementList.append("Up") 
-                        
+
+        print("Hello!")
         return MovementList
     
     
@@ -319,9 +320,11 @@ def taboo_check(x,y, warehouse):
     '''
     Check if a given coordinate is taboo or not.
         True if the coord is in a corner
-        True if the coord is in not a corner but next to a wall
+        True if the coord is against a wall in between two corners
+                                            (without obstruction)
         False if the coord is a wall
         False if the coord is a target
+        False if the coord is open space
     
     @param warehouse: a valid Warehouse object
 
@@ -347,4 +350,27 @@ def taboo_check(x,y, warehouse):
     
     
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+def move_coords(tup, action):
+    '''
+    By reading in an action, augment the tuple of coords by the correct amount
     
+    @param (x,y): a set of coordinates as a tuple
+    @param action: a string representing a one space move either;
+                                            Up, Down, Left, Right
+
+    @return
+        New coordinates as a tuple
+    '''
+    x2 = tup[0]
+    y2 = tup[1]
+    if (action is 'Up'):
+        x2 = x2 - 1
+    elif (action is 'Down'):
+        x2 = x2 + 1
+    elif (action is 'Left'):
+        y2 = y2 - 1
+    elif (action is 'Right'):
+        y2 = y2 + 1
+    return (x2, y2)
+        

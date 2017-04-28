@@ -87,7 +87,7 @@ class SokobanPuzzle(search.Problem):
         
         #Define Left movement
         if ((x_position-1, y_position) not in self.warehouse.walls):
-            if ((x_position-1, y_position) not in self.warehouse.boxes):
+            if ((x_position-1, y_position) in self.warehouse.boxes):
                 if ((x_position-2, y_position) not in self.warehouse.walls)\
                 and ((x_position-2, y_position) not in self.warehouse.boxes)\
                 and ((x_position-2, y_position) not in self.taboo_check):
@@ -95,7 +95,7 @@ class SokobanPuzzle(search.Problem):
         
         #Define Down movement
         if ((x_position, y_position+1) not in self.warehouse.walls):
-            if ((x_position, y_position+1) not in self.warehouse.boxes):
+            if ((x_position, y_position+1) in self.warehouse.boxes):
                 if ((x_position, y_position+2) not in self.warehouse.walls)\
                 and ((x_position, y_position+2) not in self.warehouse.boxes)\
                 and ((x_position, y_position+2) not in self.taboo_check):
@@ -103,7 +103,7 @@ class SokobanPuzzle(search.Problem):
                         
         #Define Right movement
         if ((x_position+1, y_position) not in self.warehouse.walls):
-            if ((x_position+1, y_position) not in self.warehouse.boxes):
+            if ((x_position+1, y_position) in self.warehouse.boxes):
                 if ((x_position+2, y_position) not in self.warehouse.walls)\
                 and ((x_position+2, y_position) not in self.warehouse.boxes)\
                 and ((x_position+2, y_position) not in self.taboo_check):
@@ -111,7 +111,7 @@ class SokobanPuzzle(search.Problem):
         
         #Define Up movement
        if ((x_position, y_position-1) not in self.warehouse.walls):
-            if ((x_position, y_position-1) not in self.warehouse.boxes):
+            if ((x_position, y_position-1) in self.warehouse.boxes):
                 if ((x_position, y_position-2) not in self.warehouse.walls)\
                 and ((x_position, y_position-2) not in self.warehouse.boxes)\
                 and ((x_position, y_position-2) not in self.taboo_check):

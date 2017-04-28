@@ -66,12 +66,25 @@ class SokobanPuzzle(search.Problem):
     
     	Use the sliding puzzle and the pancake puzzle for inspiration!
     
-    '''
-    ##         "INSERT YOUR CODE HERE"
-    
-    def __init__(self, warehouse):
-        raise NotImplementedError()
-
+    '''    
+    def __init__(self, warehouse, initial=None, goal=None):
+        x,y = zip(*warehouse.walls)
+        self.x_length = 1 + max(x)
+        self.y_length = 1 + max(y)
+        
+        if goal is None:
+            self.goal = warehouse.targets
+        else:
+            assert set(goal)==set(warehouse.targets)
+            self.goal = goal
+        if initial:
+            self.initial = initial
+        else:
+            self.initial = warehouse.boxes
+            
+        self.initial = tuple(self.initial)
+        self.goal = tuple(self.goal)
+        
     def actions(self, state):
         """
         Return the list of actions that can be executed in the given state 
@@ -110,7 +123,7 @@ class SokobanPuzzle(search.Problem):
                         MovementList.append("Right")
         
         #Define Up movement
-       if ((x_position, y_position-1) not in self.warehouse.walls):
+        if ((x_position, y_position-1) not in self.warehouse.walls):
             if ((x_position, y_position-1) in self.warehouse.boxes):
                 if ((x_position, y_position-2) not in self.warehouse.walls)\
                 and ((x_position, y_position-2) not in self.warehouse.boxes)\
@@ -118,6 +131,36 @@ class SokobanPuzzle(search.Problem):
                         MovementList.append("Up") 
                         
         return MovementList
+    
+    
+    def result(self, state, action):
+        """Return the state that results from executing the given
+        action in the given state. The action must be one of
+        self.actions(state).
+        applying action a to state s results in
+        s_next = s[:a]+s[-1:a-1:-1]        """
+
+
+    def goal_test(self, state):
+        """Return True if the state is a goal. The default method compares the
+        state to self.goal, as specified in the constructor. Override this
+        method if checking against a single self.goal is not enough."""
+
+
+    def path_cost(self, c, state1, action, state2):
+        """Return the cost of a solution path that arrives at state2 from
+        state1 via action, assuming cost c to get up to state1. If the problem
+        is such that the path doesn't matter, this function will only look at
+        state2.  If the path does matter, it will consider c and maybe state1
+        and action. The default method costs 1 for every step in the path."""
+
+
+    def h(self, n):
+        '''
+        Heuristic for goal state of the form range(k,-1,1) where k is a positive integer. 
+        h(n) = 1 + the index of the largest pancake that is still out of place
+        '''     
+
         
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

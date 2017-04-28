@@ -50,10 +50,17 @@ def taboo_cells(warehouse):
     
                   
     tabooCoords = []
-    x,y = zip(*warehouse.walls)    
-    x_length = max(x) + 1
-    y_length = max(y) + 1
     
+    #   Create a master list of walls and targets (so that these space don't
+    #   become taboo cells)
+    walls_targets = []
+    for wall in warehouse.walls:
+        walls_targets.append(wall)
+        
+    for target in warehouse.targets:
+        walls_targets.append(target)
+        
+        
     # Testing for corners can be done by testing for diagonal relationships
     # between wall cells
     for wall in warehouse.walls:
@@ -62,21 +69,28 @@ def taboo_cells(warehouse):
         bottomLeft = move_coords(move_coords(wall, "Down"), "Left")
         bottomRight = move_coords(move_coords(wall, "Down"), "Right")
         
-        if (topLeft in warehouse.walls) and (move_coords(wall, "Left") not in warehouse.walls):
+        if (topLeft in warehouse.walls) and \
+           (move_coords(wall, "Left") not in walls_targets):
             tabooCoords.append(move_coords(wall, "Left"))
-        if topRight in warehouse.walls and (move_coords(wall, "Right") not in warehouse.walls):
+            
+        if topRight in warehouse.walls and \
+            (move_coords(wall, "Right") not in walls_targets):
             tabooCoords.append(move_coords(wall, "Right"))
-        if bottomLeft in warehouse.walls and (move_coords(wall, "Left") not in warehouse.walls):
+            
+        if bottomLeft in warehouse.walls and \
+            (move_coords(wall, "Left") not in walls_targets):
             tabooCoords.append(move_coords(wall, "Left"))
-        if bottomRight in warehouse.walls and (move_coords(wall, "Right") not in warehouse.walls):
+            
+        if bottomRight in warehouse.walls and \
+            (move_coords(wall, "Right") not in walls_targets):
             tabooCoords.append(move_coords(wall, "Right"))
-        
-    
+            
     # Check to see if there are paths between taboo cells along walls
     for coord in tabooCoords:
         for secondcoord in tabooCoords:
-            for newTabooCell in taboo_along_wall(warehouse, coord, secondcoord):
-                tabooCoords.append(newTabooCell)
+            if taboo_along_wall(warehouse, coord, secondcoord) is not None:
+                for newTabooCell in taboo_along_wall(warehouse, coord, secondcoord):
+                    tabooCoords.append(newTabooCell)
                 
     # Remove any multiples in the list of taboo cells
     cleanTaboo = list(set(tabooCoords))
@@ -84,14 +98,19 @@ def taboo_cells(warehouse):
     for coord in cleanTaboo:
         tabooCoords.append(coord)
 
-    # Parse taboo cells into a string representation              
-    outputString = [[" "] * x_length for Y in range(y_length)]
-    for (X,Y) in warehouse.walls:
-        outputString[Y][X] = "#"
-    for (X,Y) in tabooCoords:
-        outputString[Y][X] = "X"
-        
-    return outputString
+    '''
+    Return a string representation of the warehouse
+    '''
+
+    X,Y = zip(*warehouse.walls)
+    x_size, y_size = 1+max(X), 1+max(Y)
+    
+    vis = [[''' '''] * x_size for y in range(y_size)]
+    for (x,y) in warehouse.walls:
+        vis[y][x] = "#"
+    for (x,y) in tabooCoords:
+        vis[y][x] = "X"
+    return "\n".join(["".join(line) for line in vis])
         
     
 
@@ -437,24 +456,45 @@ def taboo_along_wall(warehouse, tup1, tup2):
     if (x1 == x2):
         for i in range(min(y1, y2), max(y1, y2)):
             if (x1, i) in warehouse.targets:
-                return []
+                return None
             
             if (x1, i) in warehouse.walls:
                return newCells
            
             if ((x1-1, i) in warehouse.walls) or ((x1+1, i) in warehouse.walls):
-                newCells.append(x1, i)
+                newCells.append((x1, i))
     
     elif (y1 == y2):
         for i in range(min(x1, x2), max(x1, x2)):
             if (i, y1) in warehouse.targets:
-                return []
+                return None
             
             if (i, y1) in warehouse.walls:
                return newCells
            
             if ((i, y1-1) in warehouse.walls) or ((i, y1+1) in warehouse.walls):
-                newCells.append(i, y1)
+                newCells.append((i, y1))
                 
     else:
-        return []
+        return None
+
+
+
+#           CODE GRAVEYARD!
+#
+#                 .
+#                -|-
+#                 |
+#             .-'~~~`-.
+#           .'         `.
+#           |  R  I  P  |
+#           |           |
+#           |           |
+#         \\|           |//
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+#    # Remove any taboo cells placed on top of targets
+#    for coord in tabooCoords:
+#        if coord in warehouse.targets:
+#            tabooCoords.remove(coord)

@@ -66,23 +66,102 @@ class SokobanPuzzle(search.Problem):
     
     	Use the sliding puzzle and the pancake puzzle for inspiration!
     
-    '''
-    ##         "INSERT YOUR CODE HERE"
-    
-    def __init__(self, warehouse):
-        raise NotImplementedError()
-
+    '''    
+    def __init__(self, warehouse, initial=None, goal=None):
+        x,y = zip(*warehouse.walls)
+        self.x_length = 1 + max(x)
+        self.y_length = 1 + max(y)
+        
+        if goal is None:
+            self.goal = warehouse.targets
+        else:
+            assert set(goal)==set(warehouse.targets)
+            self.goal = goal
+        if initial:
+            self.initial = initial
+        else:
+            self.initial = warehouse.boxes
+            
+        self.initial = tuple(self.initial)
+        self.goal = tuple(self.goal)
+        
     def actions(self, state):
         """
         Return the list of actions that can be executed in the given state 
         if these actions do not push a box in a taboo cell.
         The actions must belong to the list ['Left', 'Down', 'Right', 'Up']        
         """
-        walls = self.warehouse.walls
+        MovementList = []
+        #Check if the agent is able to move a box (Left, Down, Right, Up) 
+        #without moving it into a taboo cell or pushing two blocks (Invalid move)
+        #then move the box in the given direction.
+        x_position = self.warehouse.worker[0]
+        y_position = self.warehouse.worker[1]
         
+        #Define Left movement
+        if ((x_position-1, y_position) not in self.warehouse.walls):
+            if ((x_position-1, y_position) in self.warehouse.boxes):
+                if ((x_position-2, y_position) not in self.warehouse.walls)\
+                and ((x_position-2, y_position) not in self.warehouse.boxes)\
+                and ((x_position-2, y_position) not in self.taboo_check):
+                        MovementList.append("Left")
         
-        raise NotImplementedError
+        #Define Down movement
+        if ((x_position, y_position+1) not in self.warehouse.walls):
+            if ((x_position, y_position+1) in self.warehouse.boxes):
+                if ((x_position, y_position+2) not in self.warehouse.walls)\
+                and ((x_position, y_position+2) not in self.warehouse.boxes)\
+                and ((x_position, y_position+2) not in self.taboo_check):
+                        MovementList.append("Down")
+                        
+        #Define Right movement
+        if ((x_position+1, y_position) not in self.warehouse.walls):
+            if ((x_position+1, y_position) in self.warehouse.boxes):
+                if ((x_position+2, y_position) not in self.warehouse.walls)\
+                and ((x_position+2, y_position) not in self.warehouse.boxes)\
+                and ((x_position+2, y_position) not in self.taboo_check):
+                        MovementList.append("Right")
+        
+        #Define Up movement
+        if ((x_position, y_position-1) not in self.warehouse.walls):
+            if ((x_position, y_position-1) in self.warehouse.boxes):
+                if ((x_position, y_position-2) not in self.warehouse.walls)\
+                and ((x_position, y_position-2) not in self.warehouse.boxes)\
+                and ((x_position, y_position-2) not in self.taboo_check):
+                        MovementList.append("Up") 
+                        
+        return MovementList
+    
+    
+    def result(self, state, action):
+        """Return the state that results from executing the given
+        action in the given state. The action must be one of
+        self.actions(state).
+        applying action a to state s results in
+        s_next = s[:a]+s[-1:a-1:-1]        """
 
+
+    def goal_test(self, state):
+        """Return True if the state is a goal. The default method compares the
+        state to self.goal, as specified in the constructor. Override this
+        method if checking against a single self.goal is not enough."""
+
+
+    def path_cost(self, c, state1, action, state2):
+        """Return the cost of a solution path that arrives at state2 from
+        state1 via action, assuming cost c to get up to state1. If the problem
+        is such that the path doesn't matter, this function will only look at
+        state2.  If the path does matter, it will consider c and maybe state1
+        and action. The default method costs 1 for every step in the path."""
+
+
+    def h(self, n):
+        '''
+        Heuristic for goal state of the form range(k,-1,1) where k is a positive integer. 
+        h(n) = 1 + the index of the largest pancake that is still out of place
+        '''     
+
+        
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def check_action_seq(warehouse, action_seq):
@@ -259,7 +338,7 @@ def taboo_check(x,y, warehouse):
     #Check if in corner, not implemented
     elif (x,y):
         return True
-    #Check if next to wall
+    #Check if not a corner but next to a wall, not implemented
     elif (x,y):
         return True
     else:

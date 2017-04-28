@@ -78,11 +78,47 @@ class SokobanPuzzle(search.Problem):
         if these actions do not push a box in a taboo cell.
         The actions must belong to the list ['Left', 'Down', 'Right', 'Up']        
         """
-        walls = self.warehouse.walls
+        MovementList = []
+        #Check if the agent is able to move a box (Left, Down, Right, Up) 
+        #without moving it into a taboo cell or pushing two blocks (Invalid move)
+        #then move the box in the given direction.
+        x_position = self.warehouse.worker[0]
+        y_position = self.warehouse.worker[1]
         
+        #Define Left movement
+        if ((x_position-1, y_position) not in self.warehouse.walls):
+            if ((x_position-1, y_position) not in self.warehouse.boxes):
+                if ((x_position-2, y_position) not in self.warehouse.walls)\
+                and ((x_position-2, y_position) not in self.warehouse.boxes)\
+                and ((x_position-2, y_position) not in self.taboo_check):
+                        MovementList.append("Left")
         
-        raise NotImplementedError
-
+        #Define Down movement
+        if ((x_position, y_position+1) not in self.warehouse.walls):
+            if ((x_position, y_position+1) not in self.warehouse.boxes):
+                if ((x_position, y_position+2) not in self.warehouse.walls)\
+                and ((x_position, y_position+2) not in self.warehouse.boxes)\
+                and ((x_position, y_position+2) not in self.taboo_check):
+                        MovementList.append("Down")
+                        
+        #Define Right movement
+        if ((x_position+1, y_position) not in self.warehouse.walls):
+            if ((x_position+1, y_position) not in self.warehouse.boxes):
+                if ((x_position+2, y_position) not in self.warehouse.walls)\
+                and ((x_position+2, y_position) not in self.warehouse.boxes)\
+                and ((x_position+2, y_position) not in self.taboo_check):
+                        MovementList.append("Right")
+        
+        #Define Up movement
+       if ((x_position, y_position-1) not in self.warehouse.walls):
+            if ((x_position, y_position-1) not in self.warehouse.boxes):
+                if ((x_position, y_position-2) not in self.warehouse.walls)\
+                and ((x_position, y_position-2) not in self.warehouse.boxes)\
+                and ((x_position, y_position-2) not in self.taboo_check):
+                        MovementList.append("Up") 
+                        
+        return MovementList
+        
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def check_action_seq(warehouse, action_seq):
@@ -259,7 +295,7 @@ def taboo_check(x,y, warehouse):
     #Check if in corner, not implemented
     elif (x,y):
         return True
-    #Check if next to wall
+    #Check if not a corner but next to a wall, not implemented
     elif (x,y):
         return True
     else:

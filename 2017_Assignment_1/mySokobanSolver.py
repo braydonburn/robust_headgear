@@ -85,12 +85,20 @@ def taboo_cells(warehouse):
             (move_coords(wall, "Right") not in walls_targets):
             tabooCoords.append(move_coords(wall, "Right"))
             
+#    print(tabooCoords)
+    newCells = []
+    #print(newCells)
+    
     # Check to see if there are paths between taboo cells along walls
     for coord in tabooCoords:
         for secondcoord in tabooCoords:
-            if taboo_along_wall(warehouse, coord, secondcoord) is not None:
-                for newTabooCell in taboo_along_wall(warehouse, coord, secondcoord):
-                    tabooCoords.append(newTabooCell)
+            cellsToAdd = taboo_along_wall(warehouse,coord, secondcoord) 
+            if cellsToAdd is not None:
+                for cell in cellsToAdd:
+                    newCells.append(cell)
+                
+    for coord in newCells:
+        tabooCoords.append(coord)
                 
     # Remove any multiples in the list of taboo cells
     cleanTaboo = list(set(tabooCoords))
@@ -110,9 +118,16 @@ def taboo_cells(warehouse):
         vis[y][x] = "#"
     for (x,y) in tabooCoords:
         vis[y][x] = "X"
-    return "\n".join(["".join(line) for line in vis])
+           
+    vis = vis[1:]
+    
+    vis = "\n".join(["".join(line) for line in vis])
+    vis = "\n" + vis
+    print('The length is %d' % len(vis))
+    return vis 
         
     
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -407,31 +422,38 @@ def taboo_along_wall(warehouse, tup1, tup2):
     y1 = tup1[1]
     y2 = tup2[1]
     
+    #print(x1, y1, 'to', x2, y2)
+    
     newCells = []
+        
     if (x1 == x2):
-        for i in range(min(y1, y2), max(y1, y2)):
+        for i in range(min(y1, y2), max(y1, y2)+1):
+           #print(x1, i)
             if (x1, i) in warehouse.targets:
+                print('X SAME BUT TARGET')
                 return None
             
-            if (x1, i) in warehouse.walls:
-               return newCells
+            if (x1, i)  == (x1, max(y1, y2)):
+                return newCells
            
             if ((x1-1, i) in warehouse.walls) or ((x1+1, i) in warehouse.walls):
                 newCells.append((x1, i))
     
     elif (y1 == y2):
-        for i in range(min(x1, x2), max(x1, x2)):
+        for i in range(min(x1, x2), max(x1, x2)+1):
             if (i, y1) in warehouse.targets:
+                print('Y SAME BUT TARGET')
                 return None
             
-            if (i, y1) in warehouse.walls:
-               return newCells
+            if (i, y1) == (max(x1, x2), y1):
+                return newCells
            
             if ((i, y1-1) in warehouse.walls) or ((i, y1+1) in warehouse.walls):
                 newCells.append((i, y1))
+                #print(newCells)
                 
     else:
-        return None
+        return newCells
     
 def taboo_check(x,y, warehouse):
     '''

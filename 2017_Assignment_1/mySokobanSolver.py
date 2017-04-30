@@ -480,18 +480,18 @@ def taboo_along_wall(warehouse, tup1, tup2):
 
 
 
-#           CODE GRAVEYARD!
+#              CODE GRAVEYARD!
 #
-#                 .
-#                -|-
-#                 |
-#             .-'~~~`-.
-#           .'         `.
-#           |  R  I  P  |
-#           |           |
-#           |           |
-#         \\|           |//
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#                    .
+#                   -|-
+#                    |
+#                .-'~~~`-.
+#              .'         `.
+#              |  R  I  P  |
+#              |           |
+#              |           |
+#            \\|           |//
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 #    # Remove any taboo cells placed on top of targets

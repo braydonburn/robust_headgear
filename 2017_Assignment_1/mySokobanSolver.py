@@ -247,41 +247,30 @@ def check_action_seq(warehouse, action_seq):
                the sequence of actions.  This must be the same string as the
                string returned by the method  Warehouse.__str__()
     '''
-    worker = list(warehouse.worker)
-    boxes = list(warehouse.boxes)
-    
-    #Skeleton code, checks not implemented
+    Puzzle = SokobanPuzzle(warehouse)
     for action in action_seq:
-        if (action is 'Up'):
-            #Checks
-            #
-            #
-            return 'Failure'
-            #Else update the position of the box & worker
-        elif (action is 'Down'):
-            #Checks
-            #
-            #
-            return 'Failure'
-            #Else update the position of the box & worker            
-        elif (action is 'Left'):
-            #Checks
-            #
-            #
-            return 'Failure'
-            #Else update the position of the box & worker
-        elif (action is 'Right'):
-            #Checks
-            #
-            #
-            return 'Failure'
-            #Else update the position of the box & worker
-            
-    WarehouseOut = warehouse.copy(worker, boxes)
-    
-    return WarehouseOut.__str__()
+        
+        Warehouse = Puzzle.result(warehouse,action)
+        
+        #Check if a worker is in a wall        
+        for wall in warehouse.walls:
+            if wall==warehouse.worker:
+                return 'Failure'
 
-
+        for box in Warehouse.boxes:
+            #Check if a box is stacked
+            stacked = set()
+            if box in stacked:
+                return 'Failure'            
+            else:
+                stacked.add(box)
+              
+            #Check if a box is in a wall    
+            for wall in Warehouse.walls:
+                if wall==box:
+                    return 'Failure'
+               
+    return warehouse.__str__()
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def solve_sokoban_elem(warehouse):

@@ -372,40 +372,6 @@ def solve_sokoban_macro(warehouse):
     ##         "INSERT YOUR CODE HERE"
     
     raise NotImplementedError()
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-def taboo_check(x,y, warehouse):
-    '''
-    Check if a given coordinate is taboo or not.
-        True if the coord is in a corner
-        True if the coord is against a wall in between two corners
-                                            (without obstruction)
-        False if the coord is a wall
-        False if the coord is a target
-        False if the coord is open space
-    
-    @param warehouse: a valid Warehouse object
-
-    @return
-        Whether or not the given coordinate is taboo or not. True if it is,
-        false if it isn't
-    '''
-    
-    #Smallest 'if' statements first to preserve memory
-    if (x,y) in warehouse.walls:
-        return False
-    elif (x,y) in warehouse.target:
-        return False
-    #Check if in corner, not implemented
-    elif (x,y):
-        return True
-    #Check if not a corner but next to a wall, not implemented
-    elif (x,y):
-        return True
-    else:
-        return False
-    
     
     
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -477,6 +443,18 @@ def taboo_along_wall(warehouse, tup1, tup2):
                 
     else:
         return None
+    
+def taboo_check(x,y, warehouse):
+    '''
+    Check if a given coordinate is taboo or not by calling taboo_cells
+    
+    '''
+    
+    if (x,y) in taboo_cells:
+        return True
+    else:
+        return False
+    
 
 
 

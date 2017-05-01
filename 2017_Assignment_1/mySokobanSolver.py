@@ -355,13 +355,17 @@ def can_go_there(warehouse, dst):
     '''
     
     ## MINI SEARCH!! 
+    new_wh = warehouse.copy()
     
-    not_free = warehouse.walls
-    for box in warehouse.boxes:
+    
+    not_free = new_wh.walls.copy()
+    for box in new_wh.boxes:
         not_free.append(box)
         
-    worker = warehouse.worker
-    old_worker = worker    
+    dst = dst
+        
+    wk = new_wh.worker
+    old_worker = wk    
     backtrack = 0
     tries = 0
     going = True
@@ -372,22 +376,26 @@ def can_go_there(warehouse, dst):
         return False
     
     while going:
-        print(worker)
-        if worker == dst:
-            return True
+        print(wk)
         for move in moves:
-            if move_coords(worker, move) not in not_free:
-                not_free.append(worker)
-                old_worker = worker
-                worker = move_coords(worker, move)
+            if move_coords(wk, move) not in not_free:
+                not_free.append(wk)
+                old_worker = wk
+                wk = move_coords(wk, move)
+                print(not_free)
+                if wk == dst:
+                    going = False
+                    return True
                 tries = 0
+                break
             else:
                 tries += 1
             
         if tries > 3:
             backtrack += 1
-            worker = old_worker
+            wk = old_worker
         if backtrack > 3:
+            going = False
             return False
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -413,6 +421,13 @@ def solve_sokoban_macro(warehouse):
     
     ##         "INSERT YOUR CODE HERE"
     
+    puzzle = SokobanPuzzle(warehouse)
+    
+    if puzzle.goal_test(puzzle.initial):
+        return []
+    
+    else:
+        pass
     
     
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -534,7 +549,7 @@ wh = sokoban.Warehouse()
 wh.read_warehouse_file("./warehouses/warehouse_01.txt")
 print(wh)
 t = SokobanPuzzle(wh)
-#print(solve_sokoban_elem(wh))
+print(can_go_there(wh, (5,5)))
 
 
 #              CODE GRAVEYARD!

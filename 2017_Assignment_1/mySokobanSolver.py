@@ -379,13 +379,11 @@ def can_go_there(warehouse, dst):
         return True
     
     while going:
-#        print(wk)
         for move in moves:
             if move_coords(wk, move) not in not_free:
                 not_free.append(wk)
                 old_worker = wk
                 wk = move_coords(wk, move)
-#                print(not_free)
                 if wk == dst:
                     going = False
                     return True
@@ -436,6 +434,12 @@ def solve_sokoban_macro(warehouse):
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     
 class SokobanMacro(search.Problem):
+    '''
+    New class to make actions, results and h(n) more specific to macro solutions
+    
+    @param search.Problem: Problem object from search.py
+    @return SokobanMacro obj
+    '''
     
     def __init__(self, warehouse, initial=None, goal=None):
         
@@ -474,20 +478,42 @@ class SokobanMacro(search.Problem):
         boxes = state[1]
         temp_warehouse = self.warehouse.copy(worker, boxes)
         no_go = self.taboo.copy()
-        for wall in self.walls:
+        walls = self.walls.copy()
+        for wall in walls:
             no_go.append(wall)
-        print("No go: ", no_go)
-        print(boxes)
+        
+        accessible = []
+        
         for box in boxes:
+            for i in range(len(moves)):
+                surrounding_space = move_coords(box, opposite_moves[i])
+                if can_go_there(temp_warehouse, move_coords(box, opposite_moves[i])):
+                    accessible.append((surrounding_space, moves[i]))
+                    
+        for space_move in accessible:
+            space = space_move[0]
+            move = space_move[1]
+            box_push_space = move_coords(move_coords(space, move), move)
+            if (box_push_space in no_go) or (box_push_space in boxes):
+                continue
+            else:
+                MovementList.append((move_coords(space, move), move))        
+                print("Movement List: ", MovementList)
+        
+        if len(accessible) < 0:            
+            # Iterate throguh the moves and make sure they satify constraints
             for move in moves:
-                if (move_coords(box, move) not in no_go) and (move_coords(box, move)\
-                               not in boxes):
-                    if can_go_there(temp_warehouse, \
-                    move_coords(box, opposite_moves[moves.index(move)])):
-                        MovementList.append((box, move))
-        
-        
-        print(MovementList)
+                if (move_coords(worker, move) not in no_go):
+                    if (move_coords(worker, move) in boxes):
+                        if move_coords(move_coords(worker, move), move) not in boxes:
+                            MovementList.append((move_coords(worker, move), move))                            
+                    else:
+                        MovementList.append((move_coords(worker, move), move))
+                
+            
+            
+            
+                
         return MovementList
     
     
@@ -498,16 +524,10 @@ class SokobanMacro(search.Problem):
         applying action a to state s results in
         s_next = s[:a]+s[-1:a-1:-1]        """
         
-        assert action in self.actions(state)
         worker = state[0]
         boxes = state[1]
-        if len(action[0]) > 2:
-            move = action[0][1]
-            coord = action[0][0]
-        else:
-            move = action[1]
-            coord = action[0]
-        
+        move = action[1]
+        coord = action[0]     
         newBoxes = []
         
         worker = coord
@@ -687,10 +707,13 @@ def closest_target(box, targets):
 
 
 wh = sokoban.Warehouse()
-wh.read_warehouse_file("./warehouses/warehouse_01.txt")
+wh.read_warehouse_file("./warehouses/warehouse_09.txt")
 print(wh)
+
 t = SokobanPuzzle(wh)
 l = SokobanMacro(wh)
+
+#print(l.result(l.initial, ((4, 5), 'Left')))
 #print(can_go_there(wh, (5,5)))
 
 

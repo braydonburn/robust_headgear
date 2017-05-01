@@ -353,48 +353,42 @@ def can_go_there(warehouse, dst):
       True if the worker can walk to cell dst=(row,col) without pushing any box
       False otherwise
     '''
-    x,y = zip(*warehouse.walls)
-    x_length = 1 + max(x)
-    y_length = 1 + max(y)
     
+    ## MINI SEARCH!! 
+    
+    not_free = warehouse.walls
+    for box in warehouse.boxes:
+        not_free.append(box)
+        
     worker = warehouse.worker
-    wx = worker[0]
-    wy = worker[1]
+    old_worker = worker    
+    backtrack = 0
+    tries = 0
+    going = True
     
-    dstx = dst[0]
-    dsty = dst[1]
+    moves = ['Left', 'Right', 'Down', 'Up']
     
-#    if wx < dstx: # worker on the right of dst
-#        for i in range(wx, dstx):
-#            for i in :
-#                
-#    def accessible(wx, wy, dstx, dsty):
-#        for i in range(wy, dsty):
-#            if (wy == dsty):
-#                return True:
-#        else
+    if dst in not_free:
+        return False
     
-    
-    
-    
-#    
-#    for box in warehouse.boxes:
-#        #Check if the destination is out of bounds
-#        if dst[0] > x_length or dst[0] < 0:
-#            return False
-#        elif dst[1] > y_length or dst[1] < 0:
-#            return False
-#        #Check if the worker is being blocked(x), check aginst y of box and worker
-#        elif box[0] in range(warehouse.worker[0],dst[0]) and box[1] is warehouse.worker[1]:
-#            return False
-#        #Check if the worker is being blocked(y), check aginst x of box and worker
-#        elif box[1] in range(warehouse.worker[1],dst[1]) and box[0] is warehouse.worker[0]:
-#            return False
-#        #Check if the worker is being blocked(both)
-#        elif box[1] in range(warehouse.worker[0], dst[0]) and box[1] in range(warehouse.worker[1], dst[1]):
-#            return False
-#        else:
-#            return True
+    while going:
+        print(worker)
+        if worker == dst:
+            return True
+        for move in moves:
+            if move_coords(worker, move) not in not_free:
+                not_free.append(worker)
+                old_worker = worker
+                worker = move_coords(worker, move)
+                tries = 0
+            else:
+                tries += 1
+            
+        if tries > 3:
+            backtrack += 1
+            worker = old_worker
+        if backtrack > 3:
+            return False
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -416,6 +410,7 @@ def solve_sokoban_macro(warehouse):
         Otherwise return M a sequence of macro actions that solves the puzzle.
         If the puzzle is already in a goal state, simply return []
     '''
+    
     ##         "INSERT YOUR CODE HERE"
     
     
@@ -536,10 +531,10 @@ def closest_target(box, targets):
 
 
 wh = sokoban.Warehouse()
-wh.read_warehouse_file("./warehouses/warehouse_09.txt")
+wh.read_warehouse_file("./warehouses/warehouse_01.txt")
 print(wh)
 t = SokobanPuzzle(wh)
-print(solve_sokoban_elem(wh))
+#print(solve_sokoban_elem(wh))
 
 
 #              CODE GRAVEYARD!

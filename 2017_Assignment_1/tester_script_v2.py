@@ -121,6 +121,7 @@ def test_check_elem_action_seq():
     wh.read_warehouse_file(problem_file)
     print('Initial state \n', wh ,'\n')
     answer = check_action_seq(wh, ['Right', 'Right','Down'])
+    print(answer)
     
     if same_multi_line_strings(answer,expected_answer_1):
         print('Test check_elem_action_seq passed\n')
@@ -148,10 +149,12 @@ def test_can_go_there():
     wh = Warehouse()
     wh.read_warehouse_file(problem_file)
     print(wh)
+    print(wh.worker)
     answer = can_go_there(wh,(30,2))
     assert( answer ==  False)
-    answer = can_go_there(wh,(6,2))
+    answer = can_go_there(wh,(6,4))
     assert( answer ==  True)
+    print('We did it!')
     
   
 def test_solve_sokoban_macro():
@@ -184,8 +187,8 @@ if __name__ == "__main__":
     
 #    print(my_team())  # should print your team
 
-    test_taboo_cells() 
-#    test_check_elem_action_seq()
+#    test_taboo_cells() 
+    test_check_elem_action_seq()
 #    test_solve_sokoban_elem()
 #    test_can_go_there()
 #    test_solve_sokoban_macro()   

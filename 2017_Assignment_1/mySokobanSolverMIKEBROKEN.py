@@ -16,8 +16,6 @@ import sokoban
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-
-
 def my_team():
     '''
     Return the list of the team members of this assignment submission as a list
@@ -49,7 +47,8 @@ def taboo_cells(warehouse):
        The returned string should NOT have marks for the worker, the targets,
        and the boxes.  
     '''
-              
+    
+                  
     tabooCoords = []
     
     #   Create a master list of walls and targets (so that these space don't
@@ -105,9 +104,7 @@ def taboo_cells(warehouse):
     cleanTaboo = list(set(tabooCoords))
     tabooCoords = []
     for coord in cleanTaboo:
-        if coord not in warehouse.walls:
-            tabooCoords.append(coord)
-        
+        tabooCoords.append(coord)
 
     '''
     Return a string representation of the warehouse
@@ -126,14 +123,13 @@ def taboo_cells(warehouse):
     
     vis = "\n".join(["".join(line) for line in vis])
     vis = "\n" + vis
+    print('The length is %d' % len(vis))
     return vis 
         
     
 
-
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-
+       
 class SokobanPuzzle(search.Problem):
     '''
     Class to represent a Sokoban puzzle.
@@ -144,24 +140,19 @@ class SokobanPuzzle(search.Problem):
     
     '''    
     def __init__(self, warehouse, initial=None, goal=None):
-        
-        self.warehouse = warehouse
-        
-        if initial is not None:
-            self.initial = initial
-        else:
-            self.initial = self.warehouse.boxes
-            
-        if goal is not None:
-            self.goal = goal
-        else: 
-            self.goal = warehouse.targets
-        assert set(self.goal) == set(warehouse.targets)
-        
         x,y = zip(*warehouse.walls)
         self.x_length = 1 + max(x)
         self.y_length = 1 + max(y)
         
+        if goal is None:
+            self.goal = warehouse.targets
+        else:
+            assert set(goal)==set(warehouse.targets)
+            self.goal = goal
+        if initial:
+            self.initial = initial
+        else:
+            self.initial = warehouse.boxes
             
         self.initial = tuple(self.initial)
         self.goal = tuple(self.goal)
@@ -176,20 +167,42 @@ class SokobanPuzzle(search.Problem):
         #Check if the agent is able to move a box (Left, Down, Right, Up) 
         #without moving it into a taboo cell or pushing two blocks (Invalid move)
         #then move the box in the given direction.
+        x_position = self.warehouse.worker[0]
+        y_position = self.warehouse.worker[1]
         
-        possible_moves = ["Up", "Down", "Left", "Right"]
+        #Define Left movement
+        if ((x_position-1, y_position) not in self.warehouse.walls):
+            if ((x_position-1, y_position) in self.warehouse.boxes):
+                if ((x_position-2, y_position) not in self.warehouse.walls)\
+                and ((x_position-2, y_position) not in self.warehouse.boxes)\
+                and ((x_position-2, y_position) not in self.taboo_check):
+                        MovementList.append("Left")
         
-        # Iterate throguh the moves and make sure they satify constraints
-        for move in possible_moves:
-            if (move_coords(self.warehouse.worker, move) not in self.warehouse.walls):
-                if (move_coords(self.warehouse.worker, move) in self.warehouse.boxes):
-                    if taboo_check(move_coords(move_coords(self.warehouse.worker, move), move), taboo_cells(self.warehouse)):
-                        pass
-                    else: 
-                        MovementList.append(move)
-                else:
-                    MovementList.append(move)
-                
+        #Define Down movement
+        if ((x_position, y_position+1) not in self.warehouse.walls):
+            if ((x_position, y_position+1) in self.warehouse.boxes):
+                if ((x_position, y_position+2) not in self.warehouse.walls)\
+                and ((x_position, y_position+2) not in self.warehouse.boxes)\
+                and ((x_position, y_position+2) not in self.taboo_check):
+                        MovementList.append("Down")
+                        
+        #Define Right movement
+        if ((x_position+1, y_position) not in self.warehouse.walls):
+            if ((x_position+1, y_position) in self.warehouse.boxes):
+                if ((x_position+2, y_position) not in self.warehouse.walls)\
+                and ((x_position+2, y_position) not in self.warehouse.boxes)\
+                and ((x_position+2, y_position) not in self.taboo_check):
+                        MovementList.append("Right")
+        
+        #Define Up movement
+        if ((x_position, y_position-1) not in self.warehouse.walls):
+            if ((x_position, y_position-1) in self.warehouse.boxes):
+                if ((x_position, y_position-2) not in self.warehouse.walls)\
+                and ((x_position, y_position-2) not in self.warehouse.boxes)\
+                and ((x_position, y_position-2) not in self.taboo_check):
+                        MovementList.append("Up") 
+
+        print("Hello!")
         return MovementList
     
     
@@ -199,35 +212,13 @@ class SokobanPuzzle(search.Problem):
         self.actions(state).
         applying action a to state s results in
         s_next = s[:a]+s[-1:a-1:-1]        """
-        self.warehouse.worker = move_coords(self.warehouse.worker, action)
-        
-        newState = []
-        
-        for box in state:
-            print("Worker:", self.warehouse.worker)
-            if self.warehouse.worker == box:
-                print("It's in my space")
-                newBox = move_coords(box, action)
-                newState.append(newBox)
-            else:
-                newState.append(box)
-                
-        newState = tuple(newState)
-        self.warehouse = self.warehouse.copy(newState, self.warehouse.worker)
-        print(self.warehouse)
-        
-                  
-        return newState
-
-        
 
 
     def goal_test(self, state):
         """Return True if the state is a goal. The default method compares the
         state to self.goal, as specified in the constructor. Override this
         method if checking against a single self.goal is not enough."""
-        return (set(state) == set(self.goal))
-        
+
 
     def path_cost(self, c, state1, action, state2):
         """Return the cost of a solution path that arrives at state2 from
@@ -235,26 +226,13 @@ class SokobanPuzzle(search.Problem):
         is such that the path doesn't matter, this function will only look at
         state2.  If the path does matter, it will consider c and maybe state1
         and action. The default method costs 1 for every step in the path."""
-        # This should probably just be 1 every state....
-        return c + 1
 
 
-    def h(self, node):
+    def h(self, n):
         '''
         Heuristic for goal state of the form range(k,-1,1) where k is a positive integer. 
-        h(n) = distance of 
+        h(n) = 1 + the index of the largest pancake that is still out of place
         '''     
-        # for each box, summ the distance to the closes target space
-        total_h = 0
-        dist = 0
-        for box in node:
-            close_target = closest_target(box, self.goal)
-            dist += (abs(close_target[0] - box[0]) + abs(close_target[1] - box[1]))
-                
-        total_h += dist
-        return total_h
-                
-            
 
         
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -281,26 +259,42 @@ def check_action_seq(warehouse, action_seq):
                A string representing the state of the puzzle after applying
                the sequence of actions.  This must be the same string as the
                string returned by the method  Warehouse.__str__()
-    '''    
-    wh = SokobanPuzzle(warehouse)
+    '''
+    worker = list(warehouse.worker)
+    boxes = list(warehouse.boxes)
     
-    current_state = []
-    
-    if action_seq[0] in wh.actions(wh.initial):
-        current_state = wh.result(action_seq[0], action_seq[0])
-        for i in range(1, len(action_seq)):
-            if action_seq[i] in wh.actions(current_state):
-                current_state = wh.result(current_state, action_seq[i])
-            else:
-                return 'Failure'
-        return wh.__str__()
-    else:
-        return 'Failure'
+    #Skeleton code, checks not implemented
+    for action in action_seq:
+        if (action is 'Up'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker
+        elif (action is 'Down'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker            
+        elif (action is 'Left'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker
+        elif (action is 'Right'):
+            #Checks
+            #
+            #
+            return 'Failure'
+            #Else update the position of the box & worker
             
- 
+    WarehouseOut = warehouse.copy(worker, boxes)
     
-               
-    
+    return WarehouseOut.__str__()
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 def solve_sokoban_elem(warehouse):
@@ -323,7 +317,10 @@ def solve_sokoban_elem(warehouse):
     
     puzzle = SokobanPuzzle(warehouse)
     
-    solution = search.breadth_first_tree_search(puzzle#, lambda n:puzzle.h(n))
+    if puzzle.goal_test(puzzle.initial):
+        return []
+    
+    solution = search.astar_tree_search(puzzle#, lambda n:puzzle.h(n)
     )
     
     return puzzle.return_path(solution.path())
@@ -384,7 +381,45 @@ def solve_sokoban_macro(warehouse):
         Otherwise return M a sequence of macro actions that solves the puzzle.
         If the puzzle is already in a goal state, simply return []
     '''
+    
     ##         "INSERT YOUR CODE HERE"
+    
+    raise NotImplementedError()
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+def taboo_check(x,y, taboo_cells_string):
+    '''
+    Check if a given coordinate is taboo or not.
+        True if the coord is in a corner
+        True if the coord is against a wall in between two corners
+                                            (without obstruction)
+        False if the coord is a wall
+        False if the coord is a target
+        False if the coord is open space
+    
+    @param warehouse: a valid Warehouse object
+
+    @return
+        Whether or not the given coordinate is taboo or not. True if it is,
+        false if it isn't
+    '''
+    
+    
+    
+    #Smallest 'if' statements first to preserve memory
+    if (x,y) in warehouse.walls:
+        return False
+    elif (x,y) in warehouse.target:
+        return False
+    #Check if in corner, not implemented
+    elif (x,y):
+        return True
+    #Check if not a corner but next to a wall, not implemented
+    elif (x,y):
+        return True
+    else:
+        return False
     
     
     
@@ -406,13 +441,13 @@ def move_coords(tup, action):
     x2 = tup[0]
     y2 = tup[1]
     if (action is 'Up'):
-        y2 -= 1
+        x2 = x2 - 1
     elif (action is 'Down'):
-        y2 += 1
+        x2 = x2 + 1
     elif (action is 'Left'):
-        x2 -= 1
+        y2 = y2 - 1
     elif (action is 'Right'):
-        x2 += 1
+        y2 = y2 + 1
     return (x2, y2)
         
 def taboo_along_wall(warehouse, tup1, tup2):
@@ -433,6 +468,9 @@ def taboo_along_wall(warehouse, tup1, tup2):
     y2 = tup2[1]
     
     #print(x1, y1, 'to', x2, y2)
+
+    
+    
     
     newCells = []
         
@@ -440,6 +478,7 @@ def taboo_along_wall(warehouse, tup1, tup2):
         for i in range(min(y1, y2), max(y1, y2)+1):
            #print(x1, i)
             if (x1, i) in warehouse.targets:
+                print('X SAME BUT TARGET')
                 return None
             
             if (x1, i)  == (x1, max(y1, y2)):
@@ -451,6 +490,7 @@ def taboo_along_wall(warehouse, tup1, tup2):
     elif (y1 == y2):
         for i in range(min(x1, x2), max(x1, x2)+1):
             if (i, y1) in warehouse.targets:
+                print('Y SAME BUT TARGET')
                 return None
             
             if (i, y1) == (max(x1, x2), y1):
@@ -462,100 +502,24 @@ def taboo_along_wall(warehouse, tup1, tup2):
                 
     else:
         return newCells
-    
-def taboo_check(coords, taboo_string):
-    '''
-    Check if a given coordinate is taboo or not by calling taboo_cells
-    
-    '''
-    taboo_list = extract_taboo(taboo_string.split(sep='\n'))
-    #return taboo_list
-    if coords in taboo_list:
-        return True
-    else:
-        return False
-    
-def extract_taboo(lines):
-    taboo =  list(sokoban.find_2D_iterator(lines, "X"))  # taboo_cells
-    return taboo
-
-def closest_target(box, targets):
-    distance = ((0,0),1000000)
-    target_holder = targets
-#    print("Length before ", len(target_holder))
-    
-#    while len(target_holder) > 1:
-    
-    for i in range(len(target_holder)):
-        target_dist = abs(target_holder[i][0] - box[0]) + abs(target_holder[i][1] - box[1])
-        if target_dist <= distance[1]:
-            distance = (target_holder[i], target_dist)
-        
-#        temp_box = []
-#        for target in target_holder:
-#            if target != distance[0]:
-#                temp_box.append(target)
-#        target_holder = temp_box
-#        print("Length after ", len(target_holder))
-    
-    #print(box, distance[0], temp_box)
-    return distance[0]
-    
 
 
-wh = sokoban.Warehouse()
-wh.read_warehouse_file("./warehouses/warehouse_03.txt")
-print(wh)
-t = SokobanPuzzle(wh)
-print(t.h(t.initial))
 
-
-#              CODE GRAVEYARD!
+#           CODE GRAVEYARD!
 #
-#                    .
-#                   -|-
-#                    |
-#                .-'~~~`-.
-#              .'         `.
-#              |  R  I  P  |
-#              |           |
-#              |           |
-#            \\|           |//
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#                 .
+#                -|-
+#                 |
+#             .-'~~~`-.
+#           .'         `.
+#           |  R  I  P  |
+#           |           |
+#           |           |
+#         \\|           |//
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 #    # Remove any taboo cells placed on top of targets
 #    for coord in tabooCoords:
 #        if coord in warehouse.targets:
 #            tabooCoords.remove(coord)
-#    #Define Left movement
-#            if ((x_position-1, y_position) not in self.warehouse.walls):
-#                if ((x_position-1, y_position) in self.warehouse.boxes):
-#                    if ((x_position-2, y_position) not in self.warehouse.walls)\
-#                    and ((x_position-2, y_position) not in self.warehouse.boxes)\
-#                    and ((x_position-2, y_position) not in self.taboo_check):
-#                            MovementList.append("Left")
-#            
-#            #Define Down movement
-#            if ((x_position, y_position+1) not in self.warehouse.walls):
-#                if ((x_position, y_position+1) in self.warehouse.boxes):
-#                    if ((x_position, y_position+2) not in self.warehouse.walls)\
-#                    and ((x_position, y_position+2) not in self.warehouse.boxes)\
-#                    and ((x_position, y_position+2) not in self.taboo_check):
-#                            MovementList.append("Down")
-#                            
-#            #Define Right movement
-#            if ((x_position+1, y_position) not in self.warehouse.walls):
-#                if ((x_position+1, y_position) in self.warehouse.boxes):
-#                    if ((x_position+2, y_position) not in self.warehouse.walls)\
-#                    and ((x_position+2, y_position) not in self.warehouse.boxes)\
-#                    and ((x_position+2, y_position) not in self.taboo_check):
-#                            MovementList.append("Right")
-#            
-#            #Define Up movement
-#            if ((x_position, y_position-1) not in self.warehouse.walls):
-#                if ((x_position, y_position-1) in self.warehouse.boxes):
-#                    if ((x_position, y_position-2) not in self.warehouse.walls)\
-#                    and ((x_position, y_position-2) not in self.warehouse.boxes)\
-#                    and ((x_position, y_position-2) not in self.taboo_check):
-#                            MovementList.append("Up") 

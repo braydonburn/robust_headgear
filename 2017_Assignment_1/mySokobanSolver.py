@@ -333,7 +333,7 @@ def solve_sokoban_elem(warehouse):
     
     puzzle = SokobanPuzzle(warehouse)
     
-    solution = search.astar_graph_search(puzzle, lambda n:puzzle.h(n))
+    solution = search.astar_graph_search(puzzle, puzzle.h)#lambda n:puzzle.h(n))
     
     if solution == None:
         return 'Impossible'
@@ -375,14 +375,17 @@ def can_go_there(warehouse, dst):
     if dst in not_free:
         return False
     
+    if dst == wk:
+        return True
+    
     while going:
-        print(wk)
+#        print(wk)
         for move in moves:
             if move_coords(wk, move) not in not_free:
                 not_free.append(wk)
                 old_worker = wk
                 wk = move_coords(wk, move)
-                print(not_free)
+#                print(not_free)
                 if wk == dst:
                     going = False
                     return True
@@ -418,22 +421,160 @@ def solve_sokoban_macro(warehouse):
         Otherwise return M a sequence of macro actions that solves the puzzle.
         If the puzzle is already in a goal state, simply return []
     '''
-    
-    ##         "INSERT YOUR CODE HERE"
-    
-    puzzle = SokobanPuzzle(warehouse)
+    puzzle = SokobanMacro(warehouse)
     
     if puzzle.goal_test(puzzle.initial):
         return []
     
+    solution = search.astar_tree_search(puzzle, puzzle.h)
+    
+    if solution == None:
+        return ['Impossible']
     else:
-        pass
+        return search.Node.solution(solution)
+    
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    
+class SokobanMacro(search.Problem):
+    
+    def __init__(self, warehouse, initial=None, goal=None):
+        
+        self.warehouse = warehouse
+        self.taboo = list(sokoban.find_2D_iterator(taboo_cells(warehouse).split(sep='\n'), "X"))
+        self.walls = warehouse.walls
+        self.targets = warehouse.targets
+        
+
+        if initial is not None:
+            self.initial = initial
+        else:
+            self.initial = (self.warehouse.worker,tuple(self.warehouse.boxes))
+            
+        if goal is not None:
+            self.goal = goal
+        else: 
+            self.goal = self.warehouse.targets
+        assert set(self.goal) == set(warehouse.targets)
+    
+    def actions(self, state):
+        """
+        Return the list of actions that can be executed in the given state 
+        if these actions do not push a box in a taboo cell.
+        The actions must belong to the list ['Left', 'Down', 'Right', 'Up']        
+        """
+        MovementList = []
+        #Check if the agent is able to move a box (Left, Down, Right, Up) 
+        #without moving it into a taboo cell or pushing two blocks (Invalid move)
+        #then move the box in the given direction.
+        
+        
+        moves = ["Up", "Down", "Left", "Right"]
+        opposite_moves = ["Down", "Up", "Right", "Left"]
+        worker = state[0]
+        boxes = state[1]
+        temp_warehouse = self.warehouse.copy(worker, boxes)
+        no_go = self.taboo.copy()
+        for wall in self.walls:
+            no_go.append(wall)
+        print("No go: ", no_go)
+        print(boxes)
+        for box in boxes:
+            for move in moves:
+                if (move_coords(box, move) not in no_go) and (move_coords(box, move)\
+                               not in boxes):
+                    if can_go_there(temp_warehouse, \
+                    move_coords(box, opposite_moves[moves.index(move)])):
+                        MovementList.append((box, move))
+        
+        
+        print(MovementList)
+        return MovementList
+    
+    
+    def result(self, state, action):
+        """Return the state that results from executing the given
+        action in the given state. The action must be one of
+        self.actions(state).
+        applying action a to state s results in
+        s_next = s[:a]+s[-1:a-1:-1]        """
+        
+        assert action in self.actions(state)
+        worker = state[0]
+        boxes = state[1]
+        if len(action[0]) > 2:
+            move = action[0][1]
+            coord = action[0][0]
+        else:
+            move = action[1]
+            coord = action[0]
+        
+        newBoxes = []
+        
+        worker = coord
+        
+        for box in boxes:
+            if box == coord:
+                newBox = move_coords(box, move)
+                newBoxes.append(newBox)
+            else:
+                newBoxes.append(box)
+        
+        newState = ((worker), tuple(newBoxes))
+        return newState
+
+        
+
+
+    def goal_test(self, state):
+        """Return True if the state is a goal. The default method compares the
+        state to self.goal, as specified in the constructor. Override this
+        method if checking against a single self.goal is not enough."""
+        return (set(state[1]) == set(self.goal))
+        
+
+    def path_cost(self, c, state1, action, state2):
+        """Return the cost of a solution path that arrives at state2 from
+        state1 via action, assuming cost c to get up to state1. If the problem
+        is such that the path doesn't matter, this function will only look at
+        state2.  If the path does matter, it will consider c and maybe state1
+        and action. The default method costs 1 for every step in the path."""
+        # This should probably just be 1 every state....
+        return c + 1
+
+
+    def h(self, node):
+        '''
+        Heuristic for goal state of the form range(k,-1,1) where k is a positive integer. 
+        h(n) = distance of 
+        '''     
+        # for each box, summ the distance to the closes target space
+        total_h = 0
+        dist = 0
+        print(node)
+        worker = node.state[0]
+        boxes = node.state[1]
+        for box in boxes:
+            close_target = closest_target(box, self.goal)
+            dist += manhattan_distance(box, close_target)
+        
+        # add the manhattan distance for each action in the node.state
+        NodeActions = self.actions(node.state)
+        for action in NodeActions:
+            dist += manhattan_distance(action[0], node.state[0])
+                
+        total_h += dist
+        print(total_h)
+        return total_h
+        
     
     
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 ### - - - - - - < < < < HELPER METHODS > > > > - - - - - - ###
+def manhattan_distance(tup, tup2):
+    return abs(tup[0] - tup2[0])+ abs(tup[1]-tup2[1])
+
 def move_coords(tup, action):
     '''
     By reading in an action, augment the tuple of coords by the correct amount
@@ -549,7 +690,8 @@ wh = sokoban.Warehouse()
 wh.read_warehouse_file("./warehouses/warehouse_01.txt")
 print(wh)
 t = SokobanPuzzle(wh)
-print(can_go_there(wh, (5,5)))
+l = SokobanMacro(wh)
+#print(can_go_there(wh, (5,5)))
 
 
 #              CODE GRAVEYARD!

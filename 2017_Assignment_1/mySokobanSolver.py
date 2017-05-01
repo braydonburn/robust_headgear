@@ -146,25 +146,25 @@ class SokobanPuzzle(search.Problem):
     def __init__(self, warehouse, initial=None, goal=None):
         
         self.warehouse = warehouse
+        self.taboo = list(sokoban.find_2D_iterator(taboo_cells(warehouse).split(sep='\n'), "X"))
+        self.walls = warehouse.walls
+        self.targets = warehouse.targets
         
+
         if initial is not None:
             self.initial = initial
         else:
-            self.initial = self.warehouse.boxes
+            self.initial = (self.warehouse.worker,tuple(self.warehouse.boxes))
             
         if goal is not None:
             self.goal = goal
         else: 
-            self.goal = warehouse.targets
+            self.goal = self.warehouse.targets
         assert set(self.goal) == set(warehouse.targets)
         
         x,y = zip(*warehouse.walls)
         self.x_length = 1 + max(x)
         self.y_length = 1 + max(y)
-        
-            
-        self.initial = tuple(self.initial)
-        self.goal = tuple(self.goal)
         
     def actions(self, state):
         """
@@ -179,11 +179,14 @@ class SokobanPuzzle(search.Problem):
         
         possible_moves = ["Up", "Down", "Left", "Right"]
         
+        worker = state[0]
+        boxes = state[1]
+        
         # Iterate throguh the moves and make sure they satify constraints
         for move in possible_moves:
-            if (move_coords(self.warehouse.worker, move) not in self.warehouse.walls):
-                if (move_coords(self.warehouse.worker, move) in self.warehouse.boxes):
-                    if taboo_check(move_coords(move_coords(self.warehouse.worker, move), move), taboo_cells(self.warehouse)):
+            if (move_coords(worker, move) not in self.walls):
+                if (move_coords(worker, move) in boxes):
+                    if move_coords(move_coords(worker, move), move) in self.taboo:
                         pass
                     else: 
                         MovementList.append(move)
@@ -199,24 +202,22 @@ class SokobanPuzzle(search.Problem):
         self.actions(state).
         applying action a to state s results in
         s_next = s[:a]+s[-1:a-1:-1]        """
-        self.warehouse.worker = move_coords(self.warehouse.worker, action)
         
-        newState = []
+        assert action in self.actions(state)
+        worker = state[0]
+        boxes = state[1]
+        newBoxes = []
         
-        for box in state:
-            print("Worker:", self.warehouse.worker)
-            if self.warehouse.worker == box:
-                print("It's in my space")
+        worker = move_coords(worker, action)
+        
+        for box in boxes:
+            if worker == box:
                 newBox = move_coords(box, action)
-                newState.append(newBox)
+                newBoxes.append(newBox)
             else:
-                newState.append(box)
+                newBoxes.append(box)
                 
-        newState = tuple(newState)
-        self.warehouse = self.warehouse.copy(newState, self.warehouse.worker)
-        print(self.warehouse)
-        
-                  
+        newState = ((worker), tuple(newBoxes))
         return newState
 
         
@@ -226,7 +227,7 @@ class SokobanPuzzle(search.Problem):
         """Return True if the state is a goal. The default method compares the
         state to self.goal, as specified in the constructor. Override this
         method if checking against a single self.goal is not enough."""
-        return (set(state) == set(self.goal))
+        return (set(state[1]) == set(self.goal))
         
 
     def path_cost(self, c, state1, action, state2):
@@ -247,11 +248,15 @@ class SokobanPuzzle(search.Problem):
         # for each box, summ the distance to the closes target space
         total_h = 0
         dist = 0
-        for box in node:
+        
+        #worker = node.state[0]
+        boxes = node.state[1]
+        for box in boxes:
             close_target = closest_target(box, self.goal)
             dist += (abs(close_target[0] - box[0]) + abs(close_target[1] - box[1]))
                 
         total_h += dist
+        print(total_h)
         return total_h
                 
             
@@ -282,20 +287,25 @@ def check_action_seq(warehouse, action_seq):
                the sequence of actions.  This must be the same string as the
                string returned by the method  Warehouse.__str__()
     '''    
-    wh = SokobanPuzzle(warehouse)
-    
-    current_state = []
-    
-    if action_seq[0] in wh.actions(wh.initial):
-        current_state = wh.result(action_seq[0], action_seq[0])
-        for i in range(1, len(action_seq)):
-            if action_seq[i] in wh.actions(current_state):
-                current_state = wh.result(current_state, action_seq[i])
-            else:
-                return 'Failure'
-        return wh.__str__()
-    else:
-        return 'Failure'
+    temp_wh = warehouse
+
+    for direction in action_seq:
+        if move_coords(temp_wh.worker, direction) in temp_wh.walls:
+            return 'Failure'
+        elif (move_coords(temp_wh.worker, direction) in temp_wh.boxes) and \
+             (move_coords(move_coords(temp_wh.worker, direction), direction) in \
+             temp_wh.boxes):
+            return 'Failure'
+        else:
+            temp_wh.worker = move_coords(temp_wh.worker, direction)
+            for box in temp_wh.boxes:
+                if (temp_wh.worker == box) and (move_coords(move_coords(box, direction), direction) not in temp_wh.walls):
+                    box = move_coords(box, direction)
+                    
+    string = temp_wh.__str__()
+                    
+    return string
+
             
  
     
@@ -323,10 +333,12 @@ def solve_sokoban_elem(warehouse):
     
     puzzle = SokobanPuzzle(warehouse)
     
-    solution = search.breadth_first_tree_search(puzzle#, lambda n:puzzle.h(n))
-    )
+    solution = search.astar_graph_search(puzzle, lambda n:puzzle.h(n))
     
-    return puzzle.return_path(solution.path())
+    if solution == None:
+        return 'Impossible'
+    else:
+        return search.Node.solution(solution)
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -341,28 +353,48 @@ def can_go_there(warehouse, dst):
       True if the worker can walk to cell dst=(row,col) without pushing any box
       False otherwise
     '''
-    
     x,y = zip(*warehouse.walls)
     x_length = 1 + max(x)
     y_length = 1 + max(y)
     
-    for box in warehouse.boxes:
-        #Check if the destination is out of bounds
-        if dst[0] > x_length or dst[0] < 0:
-            return False
-        elif dst[1] > y_length or dst[1] < 0:
-            return False
-        #Check if the worker is being blocked(x), check aginst y of box and worker
-        elif box[0] in range(warehouse.worker[0],dst[0]) and box[1] is warehouse.worker[1]:
-            return False
-        #Check if the worker is being blocked(y), check aginst x of box and worker
-        elif box[1] in range(warehouse.worker[1],dst[1]) and box[0] is warehouse.worker[0]:
-            return False
-        #Check if the worker is being blocked(both)
-        elif box[1] in range(warehouse.worker[0], dst[0]) and box[1] in range(warehouse.worker[1], dst[1]):
-            return False
-        else:
-            return True
+    worker = warehouse.worker
+    wx = worker[0]
+    wy = worker[1]
+    
+    dstx = dst[0]
+    dsty = dst[1]
+    
+#    if wx < dstx: # worker on the right of dst
+#        for i in range(wx, dstx):
+#            for i in :
+#                
+#    def accessible(wx, wy, dstx, dsty):
+#        for i in range(wy, dsty):
+#            if (wy == dsty):
+#                return True:
+#        else
+    
+    
+    
+    
+#    
+#    for box in warehouse.boxes:
+#        #Check if the destination is out of bounds
+#        if dst[0] > x_length or dst[0] < 0:
+#            return False
+#        elif dst[1] > y_length or dst[1] < 0:
+#            return False
+#        #Check if the worker is being blocked(x), check aginst y of box and worker
+#        elif box[0] in range(warehouse.worker[0],dst[0]) and box[1] is warehouse.worker[1]:
+#            return False
+#        #Check if the worker is being blocked(y), check aginst x of box and worker
+#        elif box[1] in range(warehouse.worker[1],dst[1]) and box[0] is warehouse.worker[0]:
+#            return False
+#        #Check if the worker is being blocked(both)
+#        elif box[1] in range(warehouse.worker[0], dst[0]) and box[1] in range(warehouse.worker[1], dst[1]):
+#            return False
+#        else:
+#            return True
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -463,17 +495,17 @@ def taboo_along_wall(warehouse, tup1, tup2):
     else:
         return newCells
     
-def taboo_check(coords, taboo_string):
-    '''
-    Check if a given coordinate is taboo or not by calling taboo_cells
-    
-    '''
-    taboo_list = extract_taboo(taboo_string.split(sep='\n'))
-    #return taboo_list
-    if coords in taboo_list:
-        return True
-    else:
-        return False
+#def taboo_check(coords, taboo_string):
+#    '''
+#    Check if a given coordinate is taboo or not by calling taboo_cells
+#    
+#    '''
+#    taboo_list = extract_taboo(taboo_string.split(sep='\n'))
+#    #return taboo_list
+#    if coords in taboo_list:
+#        return True
+#    else:
+#        return False
     
 def extract_taboo(lines):
     taboo =  list(sokoban.find_2D_iterator(lines, "X"))  # taboo_cells
@@ -504,10 +536,10 @@ def closest_target(box, targets):
 
 
 wh = sokoban.Warehouse()
-wh.read_warehouse_file("./warehouses/warehouse_03.txt")
+wh.read_warehouse_file("./warehouses/warehouse_09.txt")
 print(wh)
 t = SokobanPuzzle(wh)
-print(t.h(t.initial))
+print(solve_sokoban_elem(wh))
 
 
 #              CODE GRAVEYARD!
